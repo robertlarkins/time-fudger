@@ -4,13 +4,11 @@ namespace Larkins.TimeFudger
 {
     public class TimeEntry
     {
-        public TimeEntry(DateTime start, DateTime end)
+        public TimeEntry(TimePeriod timePeriod)
         {
-            Start = start;
-            End = end;
+            TimePeriod = timePeriod;
         }
 
-        public DateTime Start { get; }
-        public DateTime End { get; }
+        public TimePeriod TimePeriod { get; }
     }
 }
