@@ -36,18 +36,32 @@ namespace Larkins.TimeFudger
         {
             var newTimeSheet = new TimeSheet();
 
-            if (_timePeriods.Count == 0)
+            switch (_timePeriods.Count)
             {
-                return newTimeSheet;
+                case 1:
+                {
+                    var singleTimeEntry = AdjustSingleTimeEntry();
+                    newTimeSheet.TimeEntries.Add(singleTimeEntry);
+
+                    break;
+                }
+
+                case var count when count > 1:
+                {
+                    var timeEntries = ProcessNonEndTimeEntries();
+
+                    newTimeSheet.TimeEntries.AddRange(timeEntries);
+
+                    break;
+                }
             }
 
-            if (_timePeriods.Count == 1)
-            {
-                var singleTimeEntry = AdjustSingleTimeEntry();
-                newTimeSheet.TimeEntries.Add(singleTimeEntry);
+            return newTimeSheet;
+        }
 
-                return newTimeSheet;
-            }
+        private List<TimeEntry> ProcessNonEndTimeEntries()
+        {
+            var adjustedTimeEntries = new List<TimeEntry>();
 
             var currentTimePeriod = _timePeriods.First();
             _nextStartTime = RoundTimeToInterval(currentTimePeriod.Start);
@@ -59,15 +73,14 @@ namespace Larkins.TimeFudger
 
                 var adjustedTimeEntry = AdjustNonEndTimeEntry(currentTimePeriod, nextTimePeriod);
 
-                newTimeSheet.TimeEntries.Add(adjustedTimeEntry);
+                adjustedTimeEntries.Add(adjustedTimeEntry);
             }
 
             // Add last Time entry
             var newLastTimeEntry = AdjustLastTimeEntry();
+            adjustedTimeEntries.Add(newLastTimeEntry);
 
-            newTimeSheet.TimeEntries.Add(newLastTimeEntry);
-
-            return newTimeSheet;
+            return adjustedTimeEntries;
         }
 
         private TimeEntry AdjustNonEndTimeEntry(TimePeriod currentTimePeriod, TimePeriod nextTimePeriod)
@@ -126,18 +139,18 @@ namespace Larkins.TimeFudger
 
         private DateTime GetIntervalBetweenTwoDateTimes(DateTime dateTime1, DateTime dateTime2)
         {
-            if (dateTime1 > dateTime2)
-            {
-                var temp = dateTime1;
-                dateTime1 = dateTime2;
-                dateTime2 = temp;
-            }
-
             var timeDifference = (dateTime1 - dateTime2).Duration();
 
             if (timeDifference >= _stepInterval)
             {
                 throw new ArgumentException("Difference between DateTimes is greater than the step interval");
+            }
+
+            if (dateTime1 > dateTime2)
+            {
+                var temp = dateTime1;
+                dateTime1 = dateTime2;
+                dateTime2 = temp;
             }
 
             var roundedDateTime1 = RoundTimeToInterval(dateTime1);
