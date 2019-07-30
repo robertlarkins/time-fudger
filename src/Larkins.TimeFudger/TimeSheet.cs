@@ -9,5 +9,14 @@ namespace Larkins.TimeFudger
     public class TimeSheet
     {
         public List<TimeEntry> TimeEntries { get; } = new List<TimeEntry>();
+
+        /// <summary>
+        /// Gets the time entries sorted by Start time.
+        /// </summary>
+        /// <returns></returns>
+        public List<TimeEntry> GetSortedTimeEntries()
+        {
+            return TimeEntries.OrderBy(x => x.TimePeriod.Start).ToList();
+        }
     }
 }
