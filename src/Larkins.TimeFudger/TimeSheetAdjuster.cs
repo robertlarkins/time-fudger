@@ -34,34 +34,27 @@ namespace Larkins.TimeFudger
         /// </returns>
         public TimeSheet GetAdjustedTimeSheet()
         {
+            var timePeriods = ProcessTimeEntries();
+
             var newTimeSheet = new TimeSheet();
 
-            switch (_timePeriods.Count)
+            foreach (var timePeriod in timePeriods)
             {
-                case 1:
-                {
-                    var singleTimeEntry = AdjustSingleTimeEntry();
-                    newTimeSheet.TimeEntries.Add(singleTimeEntry);
-
-                    break;
-                }
-
-                case var count when count > 1:
-                {
-                    var timeEntries = ProcessNonEndTimeEntries();
-
-                    newTimeSheet.TimeEntries.AddRange(timeEntries);
-
-                    break;
-                }
+                var timeEntry = new TimeEntry(timePeriod);
+                newTimeSheet.TimeEntries.Add(timeEntry);
             }
 
             return newTimeSheet;
         }
 
-        private List<TimeEntry> ProcessNonEndTimeEntries()
+        private List<TimePeriod> ProcessTimeEntries()
         {
-            var adjustedTimeEntries = new List<TimeEntry>();
+            var adjustedTimeEntries = new List<TimePeriod>();
+
+            if (_timePeriods.Count == 0)
+            {
+                return adjustedTimeEntries;
+            }
 
             var currentTimePeriod = _timePeriods.First();
             _nextStartTime = RoundTimeToInterval(currentTimePeriod.Start);
@@ -83,38 +76,22 @@ namespace Larkins.TimeFudger
             return adjustedTimeEntries;
         }
 
-        private TimeEntry AdjustNonEndTimeEntry(TimePeriod currentTimePeriod, TimePeriod nextTimePeriod)
+        private TimePeriod AdjustNonEndTimeEntry(TimePeriod currentTimePeriod, TimePeriod nextTimePeriod)
         {
             var newEndTime = GetAdjustedEndTime(currentTimePeriod.End, nextTimePeriod.Start);
-            var adjustedTimeEntry = CreateTimeEntry(_nextStartTime, newEndTime);
+            var adjustedTimeEntry = new TimePeriod(_nextStartTime, newEndTime);
 
             _nextStartTime = newEndTime;
 
             return adjustedTimeEntry;
         }
 
-        private TimeEntry AdjustLastTimeEntry()
+        private TimePeriod AdjustLastTimeEntry()
         {
             var currentTimePeriod = _timePeriods.Last();
             var newLastEndTime = RoundTimeToInterval(currentTimePeriod.End);
 
-            return CreateTimeEntry(_nextStartTime, newLastEndTime);
-        }
-
-        private TimeEntry AdjustSingleTimeEntry()
-        {
-            var singleTimePeriod = _timePeriods.First();
-            var firstStartTime = RoundTimeToInterval(singleTimePeriod.Start);
-            var firstEndTime = RoundTimeToInterval(singleTimePeriod.End);
-
-            return CreateTimeEntry(firstStartTime, firstEndTime);
-        }
-
-        private TimeEntry CreateTimeEntry(DateTime start, DateTime end)
-        {
-            var newLastPeriod = new TimePeriod(start, end);
-
-            return new TimeEntry(newLastPeriod);
+            return new TimePeriod(_nextStartTime, newLastEndTime);
         }
 
         private DateTime GetAdjustedEndTime(

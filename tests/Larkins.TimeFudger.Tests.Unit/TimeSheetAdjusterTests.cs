@@ -8,6 +8,23 @@ namespace Larkins.TimeFudger.Tests.Unit
     public class TimeEntryAdjuster
     {
         [Fact]
+        public void AdjustTimeEntries_EmptyTimeSheet_SameEntriesReturned()
+        {
+            // Arrange
+            var timeSheet = new TimeSheet(); 
+            var expected = new TimeSheet();
+
+            var stepInterval = new TimeSpan(0, 0, 5, 0);
+            var timeSheetAdjuster = new TimeSheetAdjuster(stepInterval, timeSheet);
+
+            // Act
+            var result = timeSheetAdjuster.GetAdjustedTimeSheet();
+
+            // Assert
+            result.Should().BeEquivalentTo(expected);
+        }
+
+        [Fact]
         public void AdjustTimeEntries_EntriesDontNeedAdjusting_SameEntriesReturned()
         {
             // Arrange
